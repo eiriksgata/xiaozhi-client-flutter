@@ -8,6 +8,15 @@
 
 一款基于 Flutter 开发的跨平台 AI 聊天助手应用，支持多智能体管理、文字/语音多模态交互，采用 WebSocket 实时通信。
 
+## 支持平台
+
+- [x] Android
+- [x] IOS
+- [ ] Windows
+- [ ] Macos
+- [ ] linux
+- [ ] Web
+
 ## 📱 应用截图
 
 <table>
