@@ -92,7 +92,6 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
 
   void _onLongPressStart(LongPressStartDetails details) {
     setState(() {
-      _isRecording = true;
       _isCancelling = false;
       _dragDistance = 0;
     });
@@ -105,23 +104,21 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
     } else {
       widget.onRecordEnd();
     }
+    _stopRecording();
     setState(() {
-      _isRecording = false;
       _isCancelling = false;
       _dragDistance = 0;
     });
-    _stopRecording();
   }
 
-  // 暂时当作取消处理
+  // 监听手指滑动，判断是否取消
   void _onLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
-    // 向上滑动超过 100 像素则取消
+    // 向上滑动超过 100 像素则标记为取消，但不停止录音
     final distance = details.localPosition.dy;
     setState(() {
       _dragDistance = distance;
       _isCancelling = distance < -100;
     });
-    _stopRecording();
   }
 
   // 开始录音（收集数据）
