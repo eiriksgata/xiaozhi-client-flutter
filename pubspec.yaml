@@ -71,6 +71,10 @@ dependencies:
   intl: ^0.19.0
   uuid: ^4.3.3
   device_info_plus: ^12.2.0
+  record: ^6.1.2
+  opus_dart: ^3.0.1
+  audio_session: ^0.2.2
+  mp_audio_stream: ^0.2.2
 
 dev_dependencies:
   flutter_test:

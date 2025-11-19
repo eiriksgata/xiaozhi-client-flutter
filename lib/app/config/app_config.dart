@@ -29,4 +29,9 @@ class AppConfig {
   static const double borderRadius = 12.0;
   static const double cardElevation = 2.0;
   static const double spacing = 16.0;
+
+  // 音频配置
+  static int sampleRate = 16000;
+  static int channels = 1;
+  static int frameDuration = 60; // milliseconds
 }
