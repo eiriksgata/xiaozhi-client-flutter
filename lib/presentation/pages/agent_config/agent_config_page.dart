@@ -54,6 +54,7 @@ class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
         _nameController.text = agent.name;
         _urlController.text = agent.url;
         _tokenController.text = agent.token;
+        _otaController.text = agent.otaUrl;
         _descriptionController.text = agent.description;
       });
     }
@@ -187,6 +188,7 @@ class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
         name: _nameController.text.trim(),
         url: _urlController.text.trim(),
         token: _tokenController.text.trim(),
+        otaUrl: _otaController.text.trim(),
         description: _descriptionController.text.trim(),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),

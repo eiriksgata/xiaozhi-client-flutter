@@ -1,8 +1,14 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_ota_service.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_websocket_manager.dart';
 import 'package:xiaozhi_client_flutter/core/providers/agent_provider.dart';
+import 'package:xiaozhi_client_flutter/core/utils/audio_util.dart';
+import 'package:xiaozhi_client_flutter/core/utils/xiaozhi_device_info_util.dart';
 import 'package:xiaozhi_client_flutter/data/models/agent_model.dart';
 import '../../../data/models/message_model.dart';
 import '../../../core/utils/toast_util.dart';
@@ -34,6 +40,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   XiaozhiWebSocketManager? _wsManager;
   bool _isConnected = false;
   String _connectionStatus = '未连接';
+  String? _sessionId;
 
   // OTA 认证信息
   XiaozhiOtaService? _otaService;
@@ -125,8 +132,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             // 按住说话按钮
             Expanded(
               child: VoiceRecordButton(
-                onRecordStart: _onRecordStart,
-                onRecordEnd: _onRecordEnd,
+                onRecordStart: _handleAudioStart,
+                onAudioSend: _handleAudioSend,
+                onRecordEnd: _handleAudioStop,
                 onRecordCancel: _onRecordCancel,
               ),
             ),
@@ -144,41 +152,52 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
 
-    final message = MessageModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      agentId: widget.agentId,
-      type: MessageType.text,
-      content: text,
-      sender: MessageSender.user,
-      status: MessageStatus.sent,
-      timestamp: DateTime.now(),
-    );
-
-    setState(() {
-      _messages.add(message);
-    });
+    // 调用接口发送消息
+    _wsManager?.sendTextRequest(text);
 
     _textController.clear();
     _scrollToBottom();
-
-    // TODO: 调用 API 发送消息
-    //_simulateAIResponse();
   }
-  
-  void _appendOrCreateChatMessage(String role , String content) {
-    final message = MessageModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      agentId: widget.agentId,
-      type: MessageType.text,
-      content: content,
-      sender: role == 'user' ? MessageSender.user : MessageSender.ai,
-      status: MessageStatus.sent,
-      timestamp: DateTime.now(),
-    );
 
-    setState(() {
-      _messages.add(message);
-    });
+  void _appendOrCreateChatMessage(MessageSender role, String content) {
+    if (role == MessageSender.system) {
+      return;
+    }
+    final targetSender = role == MessageSender.ai
+        ? MessageSender.ai
+        : MessageSender.user;
+
+    // 检查最后一条消息是否与当前角色相同
+    if (_messages.isNotEmpty && _messages.last.sender == targetSender) {
+      // 最后一条消息角色相同，追加内容
+      setState(() {
+        final lastMessage = _messages.last;
+        final updatedMessage = MessageModel(
+          id: lastMessage.id,
+          agentId: lastMessage.agentId,
+          type: lastMessage.type,
+          content: lastMessage.content + content,
+          sender: lastMessage.sender,
+          status: lastMessage.status,
+          timestamp: lastMessage.timestamp,
+        );
+        _messages[_messages.length - 1] = updatedMessage;
+      });
+    } else {
+      // 最后一条消息角色不同或列表为空，创建新消息
+      final message = MessageModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        agentId: widget.agentId,
+        type: MessageType.text,
+        content: content,
+        sender: targetSender,
+        status: MessageStatus.sent,
+        timestamp: DateTime.now(),
+      );
+      setState(() {
+        _messages.add(message);
+      });
+    }
 
     _scrollToBottom();
   }
@@ -189,22 +208,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     ToastUtil.show('图片功能开发中');
   }
 
-  /// 开始录音
-  void _onRecordStart() {
-    ToastUtil.show('开始录音');
-    // TODO: 实现录音功能
-  }
-
-  /// 结束录音（发送）
-  void _onRecordEnd() {
-    ToastUtil.show('录音结束，发送中');
-    // TODO: 处理录音文件并发送
-  }
-
   /// 取消录音
   void _onRecordCancel() {
     ToastUtil.show('已取消录音');
-    // TODO: 删除录音文件
   }
 
   /// 显示更多选项
@@ -258,37 +264,29 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
   }
 
-  /// 模拟 AI 回复（用于测试）
-  void _simulateAIResponse() {
-    Future.delayed(const Duration(seconds: 1), () {
-      if (!mounted) return;
-
-      final aiMessage = MessageModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        agentId: widget.agentId,
-        type: MessageType.text,
-        content: '这是来自 ${widget.agentName} 的回复',
-        sender: MessageSender.ai,
-        status: MessageStatus.sent,
-        timestamp: DateTime.now(),
-      );
-
-      setState(() {
-        _messages.add(aiMessage);
-      });
-
-      _scrollToBottom();
-    });
-  }
-
   /// 加载智能体数据（编辑模式）
   Future<void> _loadAgent() async {
     final agent = await ref
         .read(agentListProvider.notifier)
         .getAgentById(widget.agentId);
 
-    if (agent != null && mounted) {
-      _currentAgent = agent;
+    if (agent != null) {
+      setState(() {
+        _currentAgent = agent;
+        // 初始化 OTA 服务，使用 Agent 的 otaUrl
+        _otaService = XiaozhiOtaService(
+          otaUrl: agent.otaUrl.isNotEmpty
+              ? agent.otaUrl
+              : 'https://api.tenclass.net/xiaozhi/ota/',
+        );
+      });
+      // Agent 加载完成后，初始化 WebSocket
+      _initializeWebSocket();
+    } else {
+      // 如果智能体不存在，返回智能体列表页面
+      if (mounted) {
+        context.go('/home');
+      }
     }
   }
 
@@ -340,7 +338,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       if (otaResponse.websocket != null) {
         if (otaResponse.activation != null) {
           final code = otaResponse.activation!.code;
-          _appendOrCreateAssistantMessage(
+          _appendOrCreateChatMessage(
+            MessageSender.ai,
             '设备需要在平台端注册，注册码:[$code]，注册成功后需重新进入对话',
           );
           _showError('认证失败: 设备未注册');
@@ -393,21 +392,21 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       }
 
       // 第二步: 获取设备ID
-      final deviceId = await DeviceUtil.getDeviceId();
+      final deviceId = await XiaozhiDeviceInfoUtil.instance
+          .getDeviceMacAddress();
 
       print(_currentAgent);
       // 第三步: 创建 WebSocket 管理器
       _wsManager = XiaozhiWebSocketManager(
         deviceId: deviceId,
         enableToken: false,
-        wsProtocol: _currentAgent?.wsProtocols ?? 'XIAOZHI',
       );
 
       // 第四步: 添加事件监听器
       _wsManager!.addListener(_handleWebSocketEvent);
 
       // 第五步: 使用Agent配置 wsUrl 和 wsToken 连接服务器
-      await _connectToWebSocket(_currentAgent?.wsUrl ?? '', 'test-token');
+      await _connectToWebSocket(_currentAgent?.url ?? '', 'test-token');
     } catch (e) {
       logger.severe('初始化 WebSocket 失败: $e');
       _showError('连接初始化失败: $e');
@@ -469,6 +468,139 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         logger.severe('WebSocket 错误: ${event.data}');
         _showError('连接错误: ${event.data}');
         break;
+    }
+  }
+
+  /// 处理二进制消息（音频数据）
+  void _handleBinaryMessage(List<int> data) {
+    //logger.info('收到音频数据: ${data.length} 字节');
+    // 这里可以播放音频
+    AudioUtil.playOpusData(Uint8List.fromList(data));
+  }
+
+  /// 处理文本消息
+  void _handleTextMessage(String message) {
+    try {
+      // 解析 JSON 消息
+      final jsonData = Map<String, dynamic>.from(
+        const JsonDecoder().convert(message),
+      );
+
+      final type = jsonData['type'] as String?;
+
+      switch (type) {
+        case 'tts':
+          // 处理 TTS 消息
+          final state = jsonData['state'] as String?;
+          final text = jsonData['text'] as String?;
+
+          if (state == 'sentence_start' && text != null && text.isNotEmpty) {
+            // AI 开始说新的一句话，追加到当前消息
+            _appendOrCreateChatMessage(MessageSender.ai, text);
+          } else if (state == 'end') {
+            // AI 说完了，标记结束
+            // _isAssistantSpeaking = false;
+            // _lastAssistantMessageId = null;
+
+            // 可以在这里添加对话结束的系统提示
+            // _addConversationEnd();
+          }
+          break;
+
+        case 'stt':
+          // 处理语音识别结果 - 实时追加到最后一条用户消息
+          final text = jsonData['text'] as String?;
+          if (text != null && text.isNotEmpty) {
+            logger.info('语音识别: $text');
+            _appendOrCreateChatMessage(MessageSender.user, text);
+            _scrollToBottom();
+          }
+          break;
+
+        case 'hello':
+          // 🔥 服务器 hello 响应，提取 session_id
+          final sessionId = jsonData['session_id'] as String?;
+          if (sessionId != null && sessionId.isNotEmpty) {
+            _sessionId = sessionId;
+            logger.info('收到服务器 hello 响应，会话ID: $_sessionId');
+          } else {
+            logger.info('收到服务器 hello 响应（无 session_id）');
+          }
+          break;
+
+        case 'mcp':
+
+          /// todo:处理 MCP 消息
+
+          break;
+
+        default:
+          logger.warning('未知消息类型: $type , 内容: $message');
+      }
+    } catch (e) {
+      logger.severe('解析消息失败: $e');
+    }
+  }
+
+  /// 处理音频数据发送（发送二进制音频数据）
+  void _handleAudioSend(Uint8List audioData) {
+    // 通过 WebSocket 发送音频数据
+    if (_wsManager != null && _isConnected) {
+      try {
+        _wsManager!.sendBinaryMessage(audioData);
+        // logger.info('已发送音频数据: ${audioData.length} 字节'); // 注释掉，避免日志过多
+      } catch (e) {
+        logger.severe('发送音频失败: $e');
+        _showError('发送音频失败: $e');
+      }
+    } else {
+      _showError('未连接到服务器，请检查网络连接');
+    }
+  }
+
+  /// 处理音频停止（发送 listen stop 消息）
+  void _handleAudioStop() {
+    if (_wsManager == null || !_isConnected) {
+      return;
+    }
+
+    try {
+      // 🔥 发送 listen stop 消息（按照协议）
+      final listenStopMessage = {
+        "session_id": _sessionId ?? "", // 使用从 hello 消息中获取的 session_id
+        "type": "listen",
+        "mode": "auto",
+        "state": "stop",
+      };
+
+      _wsManager!.sendMessage(jsonEncode(listenStopMessage));
+      logger.info('已发送 listen stop 消息: ${jsonEncode(listenStopMessage)}');
+    } catch (e) {
+      logger.severe('发送 listen stop 消息失败: $e');
+    }
+  }
+
+  /// 处理音频开始（发送 listen start 消息）
+  void _handleAudioStart() {
+    if (_wsManager == null || !_isConnected) {
+      _showError('未连接到服务器');
+      return;
+    }
+
+    try {
+      // 🔥 发送 listen start 消息（按照协议）
+      final listenStartMessage = {
+        "session_id": _sessionId ?? "", // 使用从 hello 消息中获取的 session_id
+        "type": "listen",
+        "state": "start",
+        "mode": "auto", // 自动模式：自动识别说话
+      };
+
+      _wsManager!.sendMessage(jsonEncode(listenStartMessage));
+      logger.info('已发送 listen start 消息: ${jsonEncode(listenStartMessage)}');
+    } catch (e) {
+      logger.severe('发送 listen start 消息失败: $e');
+      _showError('启动录音失败: $e');
     }
   }
 }

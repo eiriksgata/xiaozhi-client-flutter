@@ -24,6 +24,7 @@ mixin _$AgentModel {
   String get name => throw _privateConstructorUsedError;
   String get url => throw _privateConstructorUsedError;
   String get token => throw _privateConstructorUsedError;
+  String get otaUrl => throw _privateConstructorUsedError;
   String? get avatar => throw _privateConstructorUsedError;
   String get description => throw _privateConstructorUsedError;
   bool get isActive => throw _privateConstructorUsedError;
@@ -47,6 +48,7 @@ abstract class $AgentModelCopyWith<$Res> {
       String name,
       String url,
       String token,
+      String otaUrl,
       String? avatar,
       String description,
       bool isActive,
@@ -71,6 +73,7 @@ class _$AgentModelCopyWithImpl<$Res, $Val extends AgentModel>
     Object? name = null,
     Object? url = null,
     Object? token = null,
+    Object? otaUrl = null,
     Object? avatar = freezed,
     Object? description = null,
     Object? isActive = null,
@@ -93,6 +96,10 @@ class _$AgentModelCopyWithImpl<$Res, $Val extends AgentModel>
       token: null == token
           ? _value.token
           : token // ignore: cast_nullable_to_non_nullable
+              as String,
+      otaUrl: null == otaUrl
+          ? _value.otaUrl
+          : otaUrl // ignore: cast_nullable_to_non_nullable
               as String,
       avatar: freezed == avatar
           ? _value.avatar
@@ -131,6 +138,7 @@ abstract class _$$AgentModelImplCopyWith<$Res>
       String name,
       String url,
       String token,
+      String otaUrl,
       String? avatar,
       String description,
       bool isActive,
@@ -153,6 +161,7 @@ class __$$AgentModelImplCopyWithImpl<$Res>
     Object? name = null,
     Object? url = null,
     Object? token = null,
+    Object? otaUrl = null,
     Object? avatar = freezed,
     Object? description = null,
     Object? isActive = null,
@@ -175,6 +184,10 @@ class __$$AgentModelImplCopyWithImpl<$Res>
       token: null == token
           ? _value.token
           : token // ignore: cast_nullable_to_non_nullable
+              as String,
+      otaUrl: null == otaUrl
+          ? _value.otaUrl
+          : otaUrl // ignore: cast_nullable_to_non_nullable
               as String,
       avatar: freezed == avatar
           ? _value.avatar
@@ -208,6 +221,7 @@ class _$AgentModelImpl implements _AgentModel {
       required this.name,
       required this.url,
       required this.token,
+      this.otaUrl = '',
       this.avatar,
       this.description = '',
       this.isActive = true,
@@ -226,6 +240,9 @@ class _$AgentModelImpl implements _AgentModel {
   @override
   final String token;
   @override
+  @JsonKey()
+  final String otaUrl;
+  @override
   final String? avatar;
   @override
   @JsonKey()
@@ -240,7 +257,7 @@ class _$AgentModelImpl implements _AgentModel {
 
   @override
   String toString() {
-    return 'AgentModel(id: $id, name: $name, url: $url, token: $token, avatar: $avatar, description: $description, isActive: $isActive, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'AgentModel(id: $id, name: $name, url: $url, token: $token, otaUrl: $otaUrl, avatar: $avatar, description: $description, isActive: $isActive, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -252,6 +269,7 @@ class _$AgentModelImpl implements _AgentModel {
             (identical(other.name, name) || other.name == name) &&
             (identical(other.url, url) || other.url == url) &&
             (identical(other.token, token) || other.token == token) &&
+            (identical(other.otaUrl, otaUrl) || other.otaUrl == otaUrl) &&
             (identical(other.avatar, avatar) || other.avatar == avatar) &&
             (identical(other.description, description) ||
                 other.description == description) &&
@@ -265,8 +283,8 @@ class _$AgentModelImpl implements _AgentModel {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, name, url, token, avatar,
-      description, isActive, createdAt, updatedAt);
+  int get hashCode => Object.hash(runtimeType, id, name, url, token, otaUrl,
+      avatar, description, isActive, createdAt, updatedAt);
 
   @JsonKey(ignore: true)
   @override
@@ -288,6 +306,7 @@ abstract class _AgentModel implements AgentModel {
       required final String name,
       required final String url,
       required final String token,
+      final String otaUrl,
       final String? avatar,
       final String description,
       final bool isActive,
@@ -305,6 +324,8 @@ abstract class _AgentModel implements AgentModel {
   String get url;
   @override
   String get token;
+  @override
+  String get otaUrl;
   @override
   String? get avatar;
   @override

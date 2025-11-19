@@ -11,6 +11,7 @@ class AgentModel with _$AgentModel {
     required String name,
     required String url,
     required String token,
+    @Default('') String otaUrl,
     String? avatar,
     @Default('') String description,
     @Default(true) bool isActive,
