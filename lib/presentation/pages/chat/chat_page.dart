@@ -74,6 +74,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       ),
       body: Column(
         children: [
+          // 连接状态栏（仅在非连接状态时显示）
+          if (!_isConnected)
+            _buildConnectionStatusBar(),
+
           // 消息列表
           Expanded(
             child: MessageList(
@@ -99,6 +103,88 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         ],
       ),
     );
+  }
+
+  /// 连接状态栏
+  Widget _buildConnectionStatusBar() {
+    Color statusColor;
+    IconData statusIcon;
+    String statusText = _connectionStatus;
+
+    // 根据连接状态设置颜色和图标
+    if (_isConnected) {
+      statusColor = Colors.green;
+      statusIcon = Icons.check_circle;
+    } else if (_connectionStatus == '正在连接...' || _connectionStatus == '正在认证...') {
+      statusColor = Colors.orange;
+      statusIcon = Icons.sync;
+    } else {
+      statusColor = Colors.red;
+      statusIcon = Icons.error_outline;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.1),
+        border: Border(
+          bottom: BorderSide(
+            color: statusColor.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            statusIcon,
+            size: 16,
+            color: statusColor,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            statusText,
+            style: TextStyle(
+              fontSize: 13,
+              color: statusColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const Spacer(),
+          // 断线时显示重连按钮
+          if (!_isConnected && 
+              _connectionStatus != '正在连接...' && 
+              _connectionStatus != '正在认证...')
+            TextButton.icon(
+              onPressed: _reconnect,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('重连'),
+              style: TextButton.styleFrom(
+                foregroundColor: statusColor,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// 重新连接
+  Future<void> _reconnect() async {
+    if (_connectionStatus == '正在连接...' || _connectionStatus == '正在认证...') {
+      return; // 正在连接中，不重复连接
+    }
+
+    ToastUtil.show('正在重新连接...');
+    
+    // 清理旧连接
+    await _cleanupWebSocket();
+    
+    // 重新初始化 WebSocket
+    await _initializeWebSocket();
   }
 
   /// 语音输入区域

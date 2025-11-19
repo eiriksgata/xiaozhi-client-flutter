@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:opus_dart/opus_dart.dart';
 import 'app/themes/app_theme.dart';
 import 'app/routes/app_pages.dart';
 import 'core/storage/storage_service.dart';
 import 'core/providers/theme_provider.dart';
 import 'package:logging/logging.dart';
+import 'package:opus_flutter/opus_flutter.dart' as opus_flutter;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +24,12 @@ void main() async {
     );
   });
 
+  // 初始化 Hive（日程映射存储）
+  await Hive.initFlutter();
+
+  initOpus(await opus_flutter.load());
+  debugPrint('Opus初始化成功: ${getOpusVersion()}');
+  
   runApp(const ProviderScope(child: MyApp()));
 }
 
