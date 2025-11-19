@@ -22,33 +22,69 @@ class SettingsPage extends ConsumerWidget {
               ListTile(
                 leading: const Icon(Icons.confirmation_num_outlined),
                 title: const Text('虚拟MAC地址'),
-                subtitle: Text('02:00:00:00:00:00'),
-                onTap: () {
+                subtitle: FutureBuilder<String>(
+                  future: XiaozhiDeviceInfoUtil.instance.getDeviceMacAddress(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Text('加载中...');
+                    }
+                    if (snapshot.hasError) {
+                      return const Text('获取失败');
+                    }
+                    return Text(snapshot.data ?? '未知');
+                  },
+                ),
+                onTap: () async {
                   //点击复制文本
-                  XiaozhiDeviceInfoUtil.instance.getDeviceMacAddress();
+                  try {
+                    final macAddress = await XiaozhiDeviceInfoUtil.instance
+                        .getDeviceMacAddress();
+                    Clipboard.setData(ClipboardData(text: macAddress));
+                  } catch (e) {
+                    // Handle error if needed
+                  }
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.info_outlined),
                 title: const Text('虚拟Client ID'),
-                subtitle: Text('flutter_client_123456'),
-                onTap: () {
-                  //点击复制文本
-                  Clipboard.setData(
-                    const ClipboardData(text: 'flutter_client_123456'),
-                  );
+                subtitle: FutureBuilder<String>(
+                  future: XiaozhiDeviceInfoUtil.instance.getDeviceClientId(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Text('加载中...');
+                    }
+                    if (snapshot.hasError) {
+                      return const Text('获取失败');
+                    }
+                    return Text(snapshot.data ?? '未知');
+                  },
+                ),
+                onTap: () async {
+                  try {
+                    final clientId = await XiaozhiDeviceInfoUtil.instance
+                        .getDeviceClientId();
+                    Clipboard.setData(ClipboardData(text: clientId));
+                  } catch (e) {
+                    // Handle error if needed
+                  }
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.phone_android_outlined),
-                title: const Text('设备名称'),
-                subtitle: Text('flutter_client_123456'),
-                onTap: () {
-                  //点击复制文本
-                  Clipboard.setData(
-                    const ClipboardData(text: 'flutter_client_123456'),
-                  );
-                },
+                title: const Text('设备型号'),
+                subtitle: FutureBuilder<String>(
+                  future: XiaozhiDeviceInfoUtil.instance.getDeviceModel(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Text('加载中...');
+                    }
+                    if (snapshot.hasError) {
+                      return const Text('获取失败');
+                    }
+                    return Text(snapshot.data ?? '未知');
+                  },
+                ),
               ),
             ],
           ),
