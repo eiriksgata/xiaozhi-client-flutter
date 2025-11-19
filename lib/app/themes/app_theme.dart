@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'app_colors.dart';
 
 /// 应用主题配置
@@ -32,6 +33,11 @@ class AppTheme {
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
+        ),
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark, // 浅色主题用深色图标
+          statusBarBrightness: Brightness.light,
         ),
       ),
 
@@ -146,6 +152,11 @@ class AppTheme {
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimaryDark,
+        ),
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light, // 深色主题用浅色图标
+          statusBarBrightness: Brightness.dark,
         ),
       ),
 
