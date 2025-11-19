@@ -80,7 +80,7 @@ class MessageBubble extends StatelessWidget {
   Widget _buildContentByType() {
     switch (message.type) {
       case MessageType.text:
-        return Text(
+        return SelectableText(
           message.content,
           style: const TextStyle(fontSize: 15),
         );
@@ -106,12 +106,12 @@ class MessageBubble extends StatelessWidget {
           children: [
             const Icon(Icons.play_circle_outline, size: 24),
             const SizedBox(width: 8),
-            Text(message.content),
+            SelectableText(message.content),
           ],
         );
 
       case MessageType.system:
-        return Text(
+        return SelectableText(
           message.content,
           style: TextStyle(
             fontSize: 13,
