@@ -105,7 +105,7 @@ class XiaozhiDeviceInfoUtil {
     await prefs.setString(_keyClientId, uuid);
     return uuid;
   }
-  
+
   /// 生成模拟 MAC 地址
   Future<String> _generateDeviceMacAddress() async {
     final deviceId = await getDeviceUniqueId();
@@ -169,7 +169,6 @@ class XiaozhiDeviceInfoUtil {
 
   /// 获取完整的设备信息（用于调试）
   Future<Map<String, dynamic>> getFullDeviceInfo() async {
-    final deviceInfo = DeviceInfoPlugin();
     final deviceId = await getDeviceUniqueId();
     final model = await getDeviceModel();
     final osVersion = await getOSVersion();
