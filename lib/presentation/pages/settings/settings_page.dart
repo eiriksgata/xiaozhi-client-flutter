@@ -36,13 +36,15 @@ class SettingsPage extends ConsumerWidget {
                 ),
                 onTap: () async {
                   //点击复制文本
-                  try {
-                    final macAddress = await XiaozhiDeviceInfoUtil.instance
-                        .getDeviceMacAddress();
-                    Clipboard.setData(ClipboardData(text: macAddress));
-                  } catch (e) {
-                    // Handle error if needed
-                  }
+                  final macAddress = await XiaozhiDeviceInfoUtil.instance
+                      .getDeviceMacAddress();
+                  Clipboard.setData(ClipboardData(text: macAddress));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('已复制到剪贴板'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
                 },
               ),
               ListTile(
@@ -61,13 +63,15 @@ class SettingsPage extends ConsumerWidget {
                   },
                 ),
                 onTap: () async {
-                  try {
-                    final clientId = await XiaozhiDeviceInfoUtil.instance
-                        .getDeviceClientId();
-                    Clipboard.setData(ClipboardData(text: clientId));
-                  } catch (e) {
-                    // Handle error if needed
-                  }
+                  final clientId = await XiaozhiDeviceInfoUtil.instance
+                      .getDeviceClientId();
+                  Clipboard.setData(ClipboardData(text: clientId));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('已复制到剪贴板'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
                 },
               ),
               ListTile(
