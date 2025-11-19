@@ -61,8 +61,6 @@ dependencies:
   
   # 多媒体
   image_picker: ^1.0.7
-  # record: ^5.1.2  # 暂时注释，存在平台兼容性问题
-  audioplayers: ^6.1.0
   permission_handler: ^11.3.0
   
   # 工具类
