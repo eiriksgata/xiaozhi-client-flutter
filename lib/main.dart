@@ -4,6 +4,7 @@ import 'app/themes/app_theme.dart';
 import 'app/routes/app_pages.dart';
 import 'core/storage/storage_service.dart';
 import 'core/providers/theme_provider.dart';
+import 'package:logging/logging.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,11 +12,16 @@ void main() async {
   // 初始化本地存储
   await StorageService.instance.init();
 
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  // 配置 Logger - 添加这部分代码
+  Logger.root.level = Level.ALL; // 设置日志级别
+  Logger.root.onRecord.listen((record) {
+    // 使用 debugPrint 替代 print，避免警告
+    debugPrint(
+      '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}',
+    );
+  });
+
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends ConsumerWidget {
