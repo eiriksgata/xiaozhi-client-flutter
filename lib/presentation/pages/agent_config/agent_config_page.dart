@@ -18,11 +18,17 @@ class AgentConfigPage extends ConsumerStatefulWidget {
 
 class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _urlController = TextEditingController();
+  final _nameController = TextEditingController(
+    text: '小智助手${DateTime.now().millisecondsSinceEpoch}',
+  );
+  final _urlController = TextEditingController(
+    text: 'wss://api.tenclass.net/xiaozhi/v1/',
+  );
   final _tokenController = TextEditingController(text: 'to-test'); // 设置默认值
   final _descriptionController = TextEditingController();
-  final _otaController = TextEditingController();
+  final _otaController = TextEditingController(
+    text: 'https://api.tenclass.net/xiaozhi/ota/',
+  );
   bool _isLoading = false;
 
   bool get isEdit => widget.agentId != null;

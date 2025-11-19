@@ -113,8 +113,8 @@ class _ChatInputBarState extends State<ChatInputBar> {
               onPressed: _hasText ? widget.onSendText : null,
               tooltip: '发送',
               color: _hasText
-                  ? Theme.of(context).primaryColor
-                  : Colors.grey[400],
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.grey,
             ),
           ],
         ),

@@ -13,9 +13,9 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         brightness: Brightness.light,
+      ).copyWith(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
-        background: AppColors.background,
         surface: AppColors.surface,
         error: AppColors.error,
       ),
@@ -88,8 +88,8 @@ class AppTheme {
         elevation: 8,
         backgroundColor: AppColors.surface,
         indicatorColor: AppColors.primary.withOpacity(0.2),
-        labelTextStyle: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -102,8 +102,8 @@ class AppTheme {
             color: AppColors.textSecondary,
           );
         }),
-        iconTheme: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return const IconThemeData(color: AppColors.primary, size: 24);
           }
           return const IconThemeData(color: AppColors.textSecondary, size: 24);
@@ -127,9 +127,9 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         brightness: Brightness.dark,
+      ).copyWith(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
-        background: AppColors.backgroundDark,
         surface: AppColors.surfaceDark,
         error: AppColors.error,
       ),
@@ -202,8 +202,8 @@ class AppTheme {
         elevation: 8,
         backgroundColor: AppColors.surfaceDark,
         indicatorColor: AppColors.primary.withOpacity(0.3),
-        labelTextStyle: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -216,8 +216,8 @@ class AppTheme {
             color: AppColors.textSecondaryDark,
           );
         }),
-        iconTheme: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return const IconThemeData(color: AppColors.primary, size: 24);
           }
           return const IconThemeData(
