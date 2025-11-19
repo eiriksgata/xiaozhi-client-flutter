@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:xiaozhi_client_flutter/core/utils/xiaozhi_device_info_util.dart';
 import '../../../core/providers/theme_provider.dart';
 
 /// 设置页面
@@ -11,11 +13,45 @@ class SettingsPage extends ConsumerWidget {
     final themeModeNotifier = ref.read(themeModeProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('设置'),
-      ),
+      appBar: AppBar(title: const Text('设置')),
       body: ListView(
         children: [
+          _buildSection(
+            title: '设备信息',
+            children: [
+              ListTile(
+                leading: const Icon(Icons.confirmation_num_outlined),
+                title: const Text('虚拟MAC地址'),
+                subtitle: Text('02:00:00:00:00:00'),
+                onTap: () {
+                  //点击复制文本
+                  XiaozhiDeviceInfoUtil.instance.getDeviceMacAddress();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.info_outlined),
+                title: const Text('虚拟Client ID'),
+                subtitle: Text('flutter_client_123456'),
+                onTap: () {
+                  //点击复制文本
+                  Clipboard.setData(
+                    const ClipboardData(text: 'flutter_client_123456'),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.phone_android_outlined),
+                title: const Text('设备名称'),
+                subtitle: Text('flutter_client_123456'),
+                onTap: () {
+                  //点击复制文本
+                  Clipboard.setData(
+                    const ClipboardData(text: 'flutter_client_123456'),
+                  );
+                },
+              ),
+            ],
+          ),
           _buildSection(
             title: '外观',
             children: [

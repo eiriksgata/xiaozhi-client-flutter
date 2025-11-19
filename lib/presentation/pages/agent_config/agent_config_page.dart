@@ -124,16 +124,15 @@ class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
             TextFormField(
               controller: _urlController,
               decoration: const InputDecoration(
-                labelText: 'API 地址',
-                hintText: 'https://api.example.com',
+                labelText: 'Websocket 地址',
+                hintText: 'wss://api.example.com',
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return '请输入 API 地址';
+                  return '请输入 Websocket 地址';
                 }
-                if (!value.startsWith('http://') &&
-                    !value.startsWith('https://')) {
-                  return '请输入有效的 URL';
+                if (!value.startsWith('ws://') && !value.startsWith('wss://')) {
+                  return '请输入有效的 Websocket URL';
                 }
                 return null;
               },
