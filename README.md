@@ -8,6 +8,10 @@
 
 一款基于 Flutter 开发的跨平台 AI 聊天助手应用，支持多智能体管理、文字/语音多模态交互，采用 WebSocket 实时通信。只需要登录[小智官网](https://xiaozhi.me) 添加即可使用。提供动态配置，方便你本地调试不同的小智AI后台。
 
+## 下载地址
+
+- [app-release.apk](https://github.com/eiriksgata/xiaozhi-client-flutter/releases)
+- ios 自行构建
 
 ## 支持平台
 
