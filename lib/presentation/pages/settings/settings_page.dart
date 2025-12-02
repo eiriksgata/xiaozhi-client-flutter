@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:xiaozhi_client_flutter/core/utils/audio_util.dart';
 import 'package:xiaozhi_client_flutter/core/utils/xiaozhi_device_info_util.dart';
 import '../../../core/providers/theme_provider.dart';
 
@@ -89,6 +90,57 @@ class SettingsPage extends ConsumerWidget {
                     return Text(snapshot.data ?? '未知');
                   },
                 ),
+              ),
+            ],
+          ),
+          _buildSection(
+            title: '音频能力',
+            children: [
+              FutureBuilder<Map<String, bool>>(
+                future: AudioUtil.checkAudioCapabilities(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const ListTile(
+                      leading: Icon(Icons.graphic_eq),
+                      title: Text('音频能力检测'),
+                      subtitle: Text('检测中...'),
+                    );
+                  }
+                  
+                  final capabilities = snapshot.data ?? {};
+                  final aecSupported = capabilities['aecSupported'] ?? false;
+                  final noiseSuppress = capabilities['noiseSuppressSupported'] ?? false;
+                  final autoGain = capabilities['autoGainSupported'] ?? false;
+                  
+                  return Column(
+                    children: [
+                      ListTile(
+                        leading: Icon(
+                          aecSupported ? Icons.check_circle : Icons.cancel,
+                          color: aecSupported ? Colors.green : Colors.red,
+                        ),
+                        title: const Text('AEC 回声消除'),
+                        subtitle: Text(aecSupported ? '支持' : '不支持'),
+                      ),
+                      ListTile(
+                        leading: Icon(
+                          noiseSuppress ? Icons.check_circle : Icons.cancel,
+                          color: noiseSuppress ? Colors.green : Colors.red,
+                        ),
+                        title: const Text('噪声抑制'),
+                        subtitle: Text(noiseSuppress ? '支持' : '不支持'),
+                      ),
+                      ListTile(
+                        leading: Icon(
+                          autoGain ? Icons.check_circle : Icons.cancel,
+                          color: autoGain ? Colors.green : Colors.red,
+                        ),
+                        title: const Text('自动增益控制'),
+                        subtitle: Text(autoGain ? '支持' : '不支持'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ),

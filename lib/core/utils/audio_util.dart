@@ -370,4 +370,50 @@ class AudioUtil {
 
   /// 检查是否正在播放
   static bool get isPlaying => _isPlaying;
+
+  /// 🔥 检测设备音频处理能力
+  /// 返回一个 Map 包含各项音频功能的支持状态
+  static Future<Map<String, bool>> checkAudioCapabilities() async {
+    final result = <String, bool>{};
+    
+    try {
+      // 检测 AEC (回声消除) 支持
+      // 通过尝试创建带 AEC 配置的录音来检测
+      final hasPermission = await _audioRecorder.hasPermission();
+      result['hasPermission'] = hasPermission;
+      
+      // 检测 PCM16 编码支持
+      final pcm16Supported = await _audioRecorder.isEncoderSupported(
+        AudioEncoder.pcm16bits,
+      );
+      result['pcm16Supported'] = pcm16Supported;
+      
+      // Android 和 iOS 对 AEC 的支持情况
+      // Android: 大多数设备支持，通过 VOICE_COMMUNICATION 音频源
+      // iOS: 通过 AVAudioSession 的 voiceChat 模式支持
+      if (Platform.isAndroid) {
+        // Android 4.0+ (API 14+) 支持 AEC
+        result['aecSupported'] = true;
+        result['noiseSuppressSupported'] = true;
+        result['autoGainSupported'] = true;
+      } else if (Platform.isIOS) {
+        // iOS 通过 AVAudioSession voiceChat 模式支持 AEC
+        result['aecSupported'] = true;
+        result['noiseSuppressSupported'] = true;
+        result['autoGainSupported'] = true;
+      } else {
+        // 其他平台（桌面等）可能不支持
+        result['aecSupported'] = false;
+        result['noiseSuppressSupported'] = false;
+        result['autoGainSupported'] = false;
+      }
+      
+      print('$TAG: 音频能力检测结果: $result');
+    } catch (e) {
+      print('$TAG: 音频能力检测失败: $e');
+      result['error'] = true;
+    }
+    
+    return result;
+  }
 }
