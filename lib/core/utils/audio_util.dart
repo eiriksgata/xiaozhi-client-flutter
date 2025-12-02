@@ -1,17 +1,16 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:record/record.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:opus_dart/opus_dart.dart';
 import 'package:audio_session/audio_session.dart';
-import 'package:mp_audio_stream/mp_audio_stream.dart';
+import 'package:flutter_pcm_sound/flutter_pcm_sound.dart';
 import 'package:xiaozhi_client_flutter/app/config/app_config.dart';
 
 /// 音频工具类，用于处理Opus音频编解码和录制播放
 class AudioUtil {
-  static final _mpAudioStream = getAudioStream();
-
   static const String TAG = "AudioUtil";
 
   static final AudioRecorder _audioRecorder = AudioRecorder();
@@ -135,14 +134,16 @@ class AudioUtil {
     await stopPlaying();
 
     try {
-      print('$TAG: 初始化音频播放器 - 单声道 16kHz');
+      print('$TAG: 初始化音频播放器 - 单声道 ${AppConfig.sampleRate}Hz');
 
-      // 初始化为单声道，匹配 Opus 解码器输出
-      _mpAudioStream.init(
-        channels: AppConfig.channels, // 使用单声道，匹配 Opus
+      // 设置 flutter_pcm_sound
+      await FlutterPcmSound.setup(
         sampleRate: AppConfig.sampleRate, // 16000 Hz
+        channelCount: AppConfig.channels, // 单声道
       );
-      _mpAudioStream.resume(); // 开始播放
+
+      // 设置低缓冲阈值以实现实时播放
+      await FlutterPcmSound.setFeedThreshold(AppConfig.sampleRate ~/ 10); // 100ms
 
       _isPlayerInitialized = true;
       print(
@@ -162,25 +163,11 @@ class AudioUtil {
         await initPlayer();
       }
 
-      //print('$TAG: 接收到 Opus 数据: ${opusData.length} 字节');
-
-      // 解码Opus数据
+      // 解码 Opus 数据为 PCM Int16
       final Int16List pcmData = _decoder.decode(input: opusData);
-      //print('$TAG: 解码后 PCM 数据: ${pcmData.length} 样本');
 
-      // 转换 Int16 PCM 数据到 Float32 格式 (mp_audio_stream 需要)
-      final Float32List float32Data = Float32List(pcmData.length);
-      for (int i = 0; i < pcmData.length; i++) {
-        // 归一化到 -1.0 到 1.0 范围
-        float32Data[i] = pcmData[i] / 32768.0;
-      }
-
-      //print('$TAG: 转换为 Float32 数据: ${float32Data.length} 样本');
-      //print('$TAG: 前几个样本值: ${float32Data.take(5).toList()}');
-
-      // 发送到 mp_audio_stream
-      _mpAudioStream.push(float32Data);
-      //print('$TAG: 音频数据已推送到播放器');
+      // flutter_pcm_sound 直接接受 Int16 数据，无需转换为 Float32
+      await FlutterPcmSound.feed(PcmArrayInt16.fromList(pcmData.toList()));
     } catch (e, stackTrace) {
       print('$TAG: 播放失败: $e');
       print('$TAG: 堆栈: $stackTrace');
@@ -195,8 +182,7 @@ class AudioUtil {
   static Future<void> stopPlaying() async {
     if (_isPlayerInitialized) {
       try {
-        // mp_audio_stream 没有 stop 方法，使用 dispose 来完全释放
-        // 或者简单地标记为未初始化，需要时重新初始化
+        await FlutterPcmSound.release();
         print('$TAG: 播放器已停止');
       } catch (e) {
         print('$TAG: 停止播放失败: $e');

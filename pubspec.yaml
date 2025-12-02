@@ -72,7 +72,7 @@ dependencies:
   record: ^6.1.2
   opus_dart: ^3.0.1
   audio_session: ^0.2.2
-  mp_audio_stream: ^0.2.2
+  flutter_pcm_sound: ^3.3.3
   logging: ^1.3.0
   vibration: ^3.1.4
   opus_flutter: ^3.0.3

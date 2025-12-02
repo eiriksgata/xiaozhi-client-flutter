@@ -334,6 +334,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.0"
+  flutter_pcm_sound:
+    dependency: "direct main"
+    description:
+      name: flutter_pcm_sound
+      sha256: "15c6894da8195122001375084d51449bd77849579c93fca2800c00b615699dc0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.3.3"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -672,14 +680,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.4.4"
-  mp_audio_stream:
-    dependency: "direct main"
-    description:
-      name: mp_audio_stream
-      sha256: "078f9b9118056618707617bb6e853ac457389b9b90a7b5a75b90686aefdf2343"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.2"
   octo_image:
     dependency: transitive
     description:
