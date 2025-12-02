@@ -25,8 +25,9 @@ class AudioUtil {
 
   static Timer? _audioProcessingTimer;
 
-  // 🔥 振幅相关
-  static StreamController<double>? _amplitudeStreamController;
+  // 🔥 振幅相关 - 使用持久的广播流控制器
+  static final StreamController<double> _amplitudeStreamController =
+      StreamController<double>.broadcast();
   static StreamSubscription<Amplitude>? _amplitudeSubscription;
 
   // Opus相关
@@ -45,7 +46,7 @@ class AudioUtil {
 
   /// 🔥 获取归一化振幅流 (0.0 ~ 1.0)
   static Stream<double> get amplitudeStream =>
-      _amplitudeStreamController?.stream ?? const Stream.empty();
+      _amplitudeStreamController.stream;
 
   /// 初始化音频录制器
   static Future<void> initRecorder() async {
@@ -255,15 +256,15 @@ class AudioUtil {
         _isRecording = true;
         print('$TAG: 流式录音启动成功');
 
-        // 🔥 启动振幅监听
-        _amplitudeStreamController = StreamController<double>.broadcast();
+        // 🔥 启动振幅监听（使用持久的广播流）
+        _amplitudeSubscription?.cancel(); // 先取消旧的订阅
         _amplitudeSubscription = _audioRecorder
             .onAmplitudeChanged(const Duration(milliseconds: 100))
             .listen((amp) {
           // 将 dBFS (-60 ~ 0) 转换为 0.0 ~ 1.0
           // dBFS 是负值，0 表示最大音量，-60 表示静音
           final normalized = ((amp.current + 50) / 50).clamp(0.0, 1.0);
-          _amplitudeStreamController?.add(normalized);
+          _amplitudeStreamController.add(normalized);
         });
 
         // 直接从流中处理数据
@@ -304,11 +305,9 @@ class AudioUtil {
     // 取消定时器
     _audioProcessingTimer?.cancel();
 
-    // 🔥 取消振幅订阅
+    // 🔥 取消振幅订阅（不关闭 controller，保持持久流）
     await _amplitudeSubscription?.cancel();
     _amplitudeSubscription = null;
-    await _amplitudeStreamController?.close();
-    _amplitudeStreamController = null;
 
     // 停止录音
     try {
