@@ -25,6 +25,10 @@ class AudioUtil {
 
   static Timer? _audioProcessingTimer;
 
+  // 🔥 振幅相关
+  static StreamController<double>? _amplitudeStreamController;
+  static StreamSubscription<Amplitude>? _amplitudeSubscription;
+
   // Opus相关
   static final _encoder = SimpleOpusEncoder(
     sampleRate: AppConfig.sampleRate,
@@ -38,6 +42,10 @@ class AudioUtil {
 
   /// 获取音频流
   static Stream<Uint8List> get audioStream => _audioStreamController.stream;
+
+  /// 🔥 获取归一化振幅流 (0.0 ~ 1.0)
+  static Stream<double> get amplitudeStream =>
+      _amplitudeStreamController?.stream ?? const Stream.empty();
 
   /// 初始化音频录制器
   static Future<void> initRecorder() async {
@@ -203,7 +211,8 @@ class AudioUtil {
   }
 
   /// 开始录音
-  static Future<void> startRecording() async {
+  /// [enableAEC] - 是否启用回声消除（AEC）和降噪，持续监听模式建议开启
+  static Future<void> startRecording({bool enableAEC = false}) async {
     if (!_isRecorderInitialized) {
       await initRecorder();
     }
@@ -211,7 +220,7 @@ class AudioUtil {
     if (_isRecording) return;
 
     try {
-      print('$TAG: 尝试启动录音');
+      print('$TAG: 尝试启动录音 (AEC: $enableAEC)');
 
       // 确保麦克风权限已获取 - 使用不同方式检查权限
       final status = await Permission.microphone.status;
@@ -228,17 +237,34 @@ class AudioUtil {
 
       // 尝试直接使用音频流
       try {
-        print('$TAG: 尝试启动流式录音');
+        print('$TAG: 尝试启动流式录音 (AEC: $enableAEC, 降噪: $enableAEC, AGC: $enableAEC)');
         final stream = await _audioRecorder.startStream(
           RecordConfig(
             encoder: AudioEncoder.pcm16bits,
             sampleRate: AppConfig.sampleRate,
             numChannels: AppConfig.channels,
+            // 🔥 AEC 回声消除 - 持续监听模式下需要消除扬声器播放的回声
+            echoCancel: enableAEC,
+            // 🔥 降噪 - 减少背景噪音
+            noiseSuppress: enableAEC,
+            // 🔥 自动增益控制 - 自动调整麦克风音量
+            autoGain: enableAEC,
           ),
         );
 
         _isRecording = true;
         print('$TAG: 流式录音启动成功');
+
+        // 🔥 启动振幅监听
+        _amplitudeStreamController = StreamController<double>.broadcast();
+        _amplitudeSubscription = _audioRecorder
+            .onAmplitudeChanged(const Duration(milliseconds: 100))
+            .listen((amp) {
+          // 将 dBFS (-60 ~ 0) 转换为 0.0 ~ 1.0
+          // dBFS 是负值，0 表示最大音量，-60 表示静音
+          final normalized = ((amp.current + 50) / 50).clamp(0.0, 1.0);
+          _amplitudeStreamController?.add(normalized);
+        });
 
         // 直接从流中处理数据
         stream.listen(
@@ -277,6 +303,12 @@ class AudioUtil {
 
     // 取消定时器
     _audioProcessingTimer?.cancel();
+
+    // 🔥 取消振幅订阅
+    await _amplitudeSubscription?.cancel();
+    _amplitudeSubscription = null;
+    await _amplitudeStreamController?.close();
+    _amplitudeStreamController = null;
 
     // 停止录音
     try {

@@ -222,11 +222,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 onAudioSend: _handleAudioSend,
                 onRecordEnd: _handleAudioStop,
                 onRecordCancel: _onRecordCancel,
+                onContinuousListenStart: _handleContinuousListenStart,
+                onContinuousListenStop: _handleContinuousListenStop,
               ),
             ),
 
-            // 占位，保持对称
-            const SizedBox(width: 48),
           ],
         ),
       ),
@@ -687,6 +687,54 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     } catch (e) {
       logger.severe('发送 listen start 消息失败: $e');
       _showError('启动录音失败: $e');
+    }
+  }
+
+  /// 处理持续监听开始（发送 realtime 模式的 listen start 消息）
+  void _handleContinuousListenStart() {
+    if (_wsManager == null || !_isConnected) {
+      _showError('未连接到服务器');
+      return;
+    }
+
+    try {
+      // 🔥 发送 realtime 模式的 listen start 消息
+      final listenStartMessage = {
+        "session_id": _sessionId ?? "",
+        "type": "listen",
+        "state": "start",
+        "mode": "realtime", // 实时模式：持续监听
+      };
+
+      _wsManager!.sendMessage(jsonEncode(listenStartMessage));
+      logger.info('已发送持续监听 start 消息: ${jsonEncode(listenStartMessage)}');
+      ToastUtil.show('开始持续监听');
+    } catch (e) {
+      logger.severe('发送持续监听 start 消息失败: $e');
+      _showError('启动持续监听失败: $e');
+    }
+  }
+
+  /// 处理持续监听停止（发送 realtime 模式的 listen stop 消息）
+  void _handleContinuousListenStop() {
+    if (_wsManager == null || !_isConnected) {
+      return;
+    }
+
+    try {
+      // 🔥 发送 realtime 模式的 listen stop 消息
+      final listenStopMessage = {
+        "session_id": _sessionId ?? "",
+        "type": "listen",
+        "state": "stop",
+        "mode": "realtime", // 实时模式：持续监听
+      };
+
+      _wsManager!.sendMessage(jsonEncode(listenStopMessage));
+      logger.info('已发送持续监听 stop 消息: ${jsonEncode(listenStopMessage)}');
+      ToastUtil.show('停止持续监听');
+    } catch (e) {
+      logger.severe('发送持续监听 stop 消息失败: $e');
     }
   }
 }
