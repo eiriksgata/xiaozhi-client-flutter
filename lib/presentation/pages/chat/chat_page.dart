@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -45,6 +46,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   // OTA 认证信息
   XiaozhiOtaService? _otaService;
 
+  // AI 播放状态跟踪
+  bool _isAiPlaying = false;
+  Timer? _aiPlayingTimer; // 用于检测播放结束的定时器
+
   @override
   void initState() {
     super.initState();
@@ -55,6 +60,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   void dispose() {
     _textController.dispose();
     _scrollController.dispose();
+    _aiPlayingTimer?.cancel();
     _cleanupWebSocket();
     _otaService?.dispose();
     super.dispose();
@@ -560,7 +566,28 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   /// 处理二进制消息（音频数据）
   void _handleBinaryMessage(List<int> data) {
     //logger.info('收到音频数据: ${data.length} 字节');
-    // 这里可以播放音频
+    
+    // 标记 AI 开始播放
+    if (!_isAiPlaying) {
+      setState(() {
+        _isAiPlaying = true;
+      });
+      logger.info('AI 开始播放音频，暂停发送麦克风数据');
+    }
+    
+    // 重置定时器，如果一段时间没有收到新的音频数据，则认为播放结束
+    _aiPlayingTimer?.cancel();
+    _aiPlayingTimer = Timer(const Duration(milliseconds: 500), () {
+      // 500ms 没有收到新的音频数据，认为播放结束
+      if (_isAiPlaying) {
+        setState(() {
+          _isAiPlaying = false;
+        });
+        logger.info('AI 播放结束，恢复发送麦克风数据');
+      }
+    });
+    
+    // 播放音频
     AudioUtil.playOpusData(Uint8List.fromList(data));
   }
 
@@ -584,12 +611,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             // AI 开始说新的一句话，追加到当前消息
             _appendOrCreateChatMessage(MessageSender.ai, text);
           } else if (state == 'end') {
-            // AI 说完了，标记结束
-            // _isAssistantSpeaking = false;
-            // _lastAssistantMessageId = null;
-
-            // 可以在这里添加对话结束的系统提示
-            // _addConversationEnd();
+            // AI 说完了，标记播放结束
+            _aiPlayingTimer?.cancel();
+            if (_isAiPlaying) {
+              setState(() {
+                _isAiPlaying = false;
+              });
+              logger.info('TTS 结束，AI 播放完成，恢复发送麦克风数据');
+            }
           }
           break;
 
@@ -630,6 +659,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   /// 处理音频数据发送（发送二进制音频数据）
   void _handleAudioSend(Uint8List audioData) {
+    // 如果 AI 正在播放，则不发送音频数据（但录音继续）
+    if (_isAiPlaying) {
+      // logger.info('AI 正在播放，跳过发送音频数据'); // 注释掉，避免日志过多
+      return;
+    }
+    
     // 通过 WebSocket 发送音频数据
     if (_wsManager != null && _isConnected) {
       try {

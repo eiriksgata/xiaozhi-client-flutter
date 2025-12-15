@@ -163,6 +163,9 @@ class AudioUtil {
         await initPlayer();
       }
 
+      // 标记正在播放
+      _isPlaying = true;
+
       // 解码 Opus 数据为 PCM Int16
       final Int16List pcmData = _decoder.decode(input: opusData);
 
@@ -189,6 +192,8 @@ class AudioUtil {
       }
       _isPlayerInitialized = false;
     }
+    // 标记播放已停止
+    _isPlaying = false;
   }
 
   /// 释放资源
