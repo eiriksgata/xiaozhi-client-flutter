@@ -227,11 +227,11 @@ dart run build_runner watch --delete-conflicting-outputs
 
 ### Android 配置
 
-最低 SDK 版本已设置为 21（Android 5.0），位于 `android/app/build.gradle.kts`：
+最低 SDK 版本已设置为 23（Android 6.0），位于 `android/app/build.gradle.kts`：
 
 ```kotlin
 defaultConfig {
-    minSdk = 21
+    minSdk = 23  // record_android 插件要求最低 SDK 版本为 23
     targetSdk = flutter.targetSdkVersion
 }
 ```
